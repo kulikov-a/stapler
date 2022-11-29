@@ -219,7 +219,7 @@ if [ -z "$always_update" ] && [ -L "$ocsp_bin" ] && [ -e "$ocsp_bin" ] && [ "$fr
     target_date="$(echo "$t" | cut -d '.' -f 4)"     # thisUpdate
     target_nextupdate=${t##*.}                       # nextUpdate
     say 4 "ocsp staple: checking if refresh required. now: $now; nextUpdate: $target_nextupdate; thisUpdate: $target_date; last refresh: $target_updated" debug
-    if [ -n "$target_update" ] && [ $((target_update + min_freq_sec)) -lt $((now + run_freq_sec)) ]; then
+    if [ -n "$target_updated" ] && [ $((target_updated + min_freq_sec)) -lt $((now + run_freq_sec)) ]; then
         say 4 "ocsp staple: stapled respone is more then ""$min_freq""H old or will be on next cycle. need to renew" debug
     else
         if [ "$target_nextupdate" -gt 0 ] && [ $((now + run_freq_sec)) -lt "$target_nextupdate" ]; then
@@ -265,7 +265,6 @@ fi
 
 # check response status
 resp_status="$(printf %s "$resp" | head -1)"
-#echo status $resp_status
 [ "$resp_status" = "$cert_pem: good" ] || handle_bad_status "nogood"
 
 # parse OCSP dates
@@ -282,7 +281,6 @@ resp_verify=$(openssl ocsp -issuer "$issuer_pem" -verify_other "$issuer_pem" -ce
 # save respone and update link.
 ocsp_out="$ocsp_bin.$now.$resp_date.$resp_expire"
 
-#echo ocsp out: $ocsp_out
 mv "$ocsp_tmp" "$ocsp_out" || bye 1 1 "ocsp staple error: error saving ocsp response to file $ocsp_out" error
 say 4 "ocsp staple: ocsp response saved in $ocsp_out" debug
 
